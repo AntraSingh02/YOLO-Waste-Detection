@@ -105,15 +105,64 @@ def _display_detected_frames(model, st_frame, image):
     st_frame.image(res_plotted, channels="BGR")
 
 def play_webcam(model):
-    st.markdown("### 📷 Cloud Scanner")
-    st.info("Since this app is hosted on the cloud, please use the native camera tool below to snap a picture of your waste items.")
+    from streamlit_webrtc import webrtc_streamer
+    import av
+    st.markdown("### 📷 Live Cloud Stream (WebRTC)")
+    st.info("Ensure you are hosting this on a platform with proper STUN/TURN server access if using strict firewalls.")
     
-    camera_image = st.camera_input("Scan Waste")
-    
-    if camera_image is not None:
-        image = Image.open(camera_image)
-        image = np.array(image)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    if 'detection_queue' not in st.session_state:
+        import queue
+        st.session_state.detection_queue = queue.Queue()
+
+    def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
+        image = frame.to_ndarray(format="bgr24")
+        res = model.predict(image, conf=0.6)
         
-        st_frame = st.empty()
-        _display_detected_frames(model, st_frame, image)
+        # Extract classes for tracking stats
+        names = model.names
+        detected_classes = [names[int(c)] for c in res[0].boxes.cls]
+        
+        if detected_classes:
+            st.session_state.detection_queue.put(detected_classes)
+
+        res_plotted = res[0].plot()
+        return av.VideoFrame.from_ndarray(res_plotted, format="bgr24")
+
+    ctx = webrtc_streamer(
+        key="waste-detection",
+        video_frame_callback=video_frame_callback,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={"video": True, "audio": False}
+    )
+
+    if st.button('🔄 Refresh Statistics from Stream'):
+        import queue
+        all_classes_detected = set()
+        while not st.session_state.detection_queue.empty():
+            try:
+                frame_classes = st.session_state.detection_queue.get_nowait()
+                all_classes_detected.update(frame_classes)
+            except queue.Empty:
+                break
+        
+        if all_classes_detected:
+            recyclable, non_recyclable, hazardous = classify_waste_type(all_classes_detected)
+            timestamp = time.strftime("%H:%M:%S")
+
+            if 'bins' not in st.session_state:
+                st.session_state['bins'] = {
+                    "Recyclable": {"count": 0, "items": []},
+                    "Non-Recyclable": {"count": 0, "items": []},
+                    "Hazardous": {"count": 0, "items": []}
+                }
+            if 'history' not in st.session_state:
+                st.session_state['history'] = []
+
+            for items, cat in [(recyclable, "Recyclable"), (non_recyclable, "Non-Recyclable"), (hazardous, "Hazardous")]:
+                for item in items:
+                    item_name = remove_dash_from_class_name(item)
+                    st.session_state['bins'][cat]['count'] += 1
+                    st.session_state['bins'][cat]['items'].append(item_name)
+                    st.session_state['history'].append({"time": timestamp, "item": item_name, "category": cat})
+            st.success(f"Statistics refreshed! Processed {len(all_classes_detected)} items from the live stream.")
+            st.rerun()
