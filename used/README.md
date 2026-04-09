@@ -9,55 +9,59 @@ app_file: app.py
 pinned: false
 ---
 
-# Intelligent waste segregation system
-This project demonstrates waste detection using a YOLOv8 (You Only Look Once) object detection model. It identifies recyclable, non-recyclable, and hazardous waste items in a webcam stream.
+# ♻️ Intelligent Waste Segregation System
 
-Our datasets used to train:
-https://universe.roboflow.com/ai-project-i3wje/waste-detection-vqkjo/model/3
+This project demonstrates AI-powered waste detection using a specialized **YOLOv8** (You Only Look Once) object detection model. It classifies recyclable, non-recyclable, and hazardous waste items in real-time.
 
-Colab:
-https://colab.research.google.com/drive/1dHv5QUuz2NkkgzeKBoO4DLAhLg9mOrzv?usp=sharing
+## 🚀 Features
+- **Real-Time Detection:** Rapid identification of waste items via your local webcam using OpenCV rendering.
+- **Cloud Connectivity Solutions:** Includes a reliable native camera snapshot interface built to bypass strict cloud firewalls (perfect for Hugging Face Spaces and Streamlit Community Cloud).
+- **Categorization & Logging:** Visually sorts items and maintains an automated history of your waste bins.
 
-Live:
-https://intelligent-waste-segregation-system.streamlit.app
+---
 
+## 💻 Local Installation
 
-## Setup
+To run this application efficiently on your own machine using real-time video monitoring:
 
-**Clone the Repository:**
+**1. Clone the Repository:**
 ```bash
-git clone https://github.com/boss4848/waste-detection.git
-cd waste-detection
+git clone https://github.com/AntraSingh02/YOLO-Waste-Detection.git
+cd YOLO-Waste-Detection
 ```
-**Install Dependencies:**
+
+**2. Install Dependencies:**
 ```bash
-pip install -r requirements.txt
+pip install -r used/requirements.txt
 ```
-**Run the Application**
+
+**3. Run the Application:**
 ```bash
-streamlit run app.py
+streamlit run used/app.py
 ```
-Open your web browser and navigate to the provided URL (usually http://localhost:8501). You will see the Waste Detection app.
+*Navigate to http://localhost:8501 to interact with the continuous webcam scanner.*
 
-## Project Structure
+---
 
-- `app.py`: Main application file containing Streamlit code.
-- `helper.py`: Helper functions for waste detection using the YOLO model.
-- `settings.py`: Configuration settings, including the path to the YOLO model and waste types.
-- `train.py`: To train the model
+## ☁️ Cloud Deployment (Streamlit Cloud & Hugging Face)
 
-## Classifying Waste Items
+Because cloud hosting platforms safely isolate camera drivers from python backend processes, the system provides a dual-variant setup (`app_cloud.py`) replacing continuous video buffers with a static native camera tool.
 
-- **RECYCLABLE**=['cardboard_box','can','plastic_bottle_cap','plastic_bottle','reuseable_paper']
-- **NON_RECYCLABLE**=['plastic_bag','scrap_paper','stick','plastic_cup','snack_bag','plastic_box','straw','plastic_cup_lid','scrap_plastic','cardboard_bowl','plastic_cultery']
-- **HAZARDOUS**=['battery','chemical_spray_can','chemical_plastic_bottle','chemical_plastic_gallon','light_bulb','paint_bucket']
+**To deploy remotely:**
+- On **Streamlit Cloud**, connect your repository and configure the **Main file path** to: `used/app_cloud.py`
+- On **Hugging Face Spaces**, the repository natively processes the `app.py` routing, allowing for direct deployments. 
 
-## Screenshots
+---
 
-![screenshot2](screenshot2.png)
+## 🗂️ Project Structure
 
-## References
+- `used/app.py`: Main Streamlit file running continuous OpenCV realtime inference.
+- `used/app_cloud.py`: Cloud-optimized app using robust native single-snap photo handling.
+- `used/helper.py` & `used/helper_cloud.py`: Core logic combining YOLO inferences with local rendering.
+- `settings.py`: Global configuration mappings, ML models, and waste classifications.
 
-- [Streamlit Documentation](https://docs.streamlit.io/)
-- [YOLO Documentation](https://github.com/ultralytics/yolov5)
+## 🗑️ Waste Taxonomies
 
+- **RECYCLABLE** = `['cardboard_box', 'can', 'plastic_bottle_cap', 'plastic_bottle', 'reuseable_paper']`
+- **NON_RECYCLABLE** = `['plastic_bag', 'scrap_paper', 'stick', 'plastic_cup', 'snack_bag', 'plastic_box', 'straw', 'plastic_cup_lid', 'scrap_plastic', 'cardboard_bowl', 'plastic_cultery']`
+- **HAZARDOUS** = `['battery', 'chemical_spray_can', 'chemical_plastic_bottle', 'chemical_plastic_gallon', 'light_bulb', 'paint_bucket']`
