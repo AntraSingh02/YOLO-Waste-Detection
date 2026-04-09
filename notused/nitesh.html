@@ -1,0 +1,45 @@
+from flask import Flask, request, jsonify
+from gpiozero import Servo
+from time import sleep
+
+app = Flask(__name__)
+
+# Basic servo initialization on GPIO 17
+# Note: gpiozero Servo uses values from -1 to 1 instead of 0 to 180 degrees.
+# Depending on your servo, you might need to adjust min_pulse_width / max_pulse_width.
+servo = Servo(17)
+
+@app.route('/move_servo', methods=['POST'])
+def move_servo():
+try:
+data = request.get_json()
+signal_type = data.get("type")
+
+if signal_type == "R":
+print("Recyclable Waste Detected! Moving to 90 degrees (mid).")
+# Move to 90 degrees (middle = 0 in gpiozero)
+servo.value = 0
+sleep(3)
+# Move back to 0 degrees (min = -1 in gpiozero)
+servo.min()
+
+elif signal_type == "N":
+print("Non-Recyclable Waste Detected! Moving to 180 degrees (max).")
+# Move to 180 degrees (max = 1 in gpiozero)
+servo.max()
+sleep(3)
+# Move back to 0 degrees (min = -1 in gpiozero)
+servo.min()
+
+return jsonify({"status": "success", "message": f"Servo moved for {signal_type}"}), 200
+
+except Exception as e:
+print(f"Error handling request: {e}")
+return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == '__main__':
+# Initial position
+servo.min()
+print("Servo initialized. Starting server on port 5000...")
+# Listen on all interfaces
+app.run(host='0.0.0.0', port=5000)

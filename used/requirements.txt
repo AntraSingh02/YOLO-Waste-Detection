@@ -1,0 +1,10 @@
+streamlit
+opencv-python-headless
+torch
+torchvision
+ultralytics
+urllib3
+onnx
+requests
+streamlit-webrtc
+huggingface_hub
